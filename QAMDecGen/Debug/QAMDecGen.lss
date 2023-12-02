@@ -9810,6 +9810,12 @@ Disassembly of section .text:
     50e0:	08 95       	ret
 
 000050e2 <calculateChecksum>:
+int k = 0;
+int time_since_pik = 0;
+int16_t impulses[4][NR_OF_SAMPLES]; //Die Impulse werden in einem Array gespeichert
+
+// Funktion zur Berechnung der Checksumme
+uint8_t calculateChecksum(uint8_t *data, size_t length) {
     50e2:	cf 93       	push	r28
     50e4:	df 93       	push	r29
     50e6:	cd b7       	in	r28, 0x3d	; 61
@@ -9821,10 +9827,13 @@ Disassembly of section .text:
     50f2:	9d 83       	std	Y+5, r25	; 0x05
     50f4:	6e 83       	std	Y+6, r22	; 0x06
     50f6:	7f 83       	std	Y+7, r23	; 0x07
+	uint8_t checksumCA = 0;
     50f8:	19 82       	std	Y+1, r1	; 0x01
+	for (size_t i = 0; i < length; ++i) {
     50fa:	1a 82       	std	Y+2, r1	; 0x02
     50fc:	1b 82       	std	Y+3, r1	; 0x03
     50fe:	10 c0       	rjmp	.+32     	; 0x5120 <calculateChecksum+0x3e>
+		checksumCA += data[i];
     5100:	2c 81       	ldd	r18, Y+4	; 0x04
     5102:	3d 81       	ldd	r19, Y+5	; 0x05
     5104:	8a 81       	ldd	r24, Y+2	; 0x02
@@ -9836,6 +9845,12 @@ Disassembly of section .text:
     5110:	99 81       	ldd	r25, Y+1	; 0x01
     5112:	89 0f       	add	r24, r25
     5114:	89 83       	std	Y+1, r24	; 0x01
+int16_t impulses[4][NR_OF_SAMPLES]; //Die Impulse werden in einem Array gespeichert
+
+// Funktion zur Berechnung der Checksumme
+uint8_t calculateChecksum(uint8_t *data, size_t length) {
+	uint8_t checksumCA = 0;
+	for (size_t i = 0; i < length; ++i) {
     5116:	8a 81       	ldd	r24, Y+2	; 0x02
     5118:	9b 81       	ldd	r25, Y+3	; 0x03
     511a:	01 96       	adiw	r24, 0x01	; 1
@@ -9848,7 +9863,11 @@ Disassembly of section .text:
     5128:	28 17       	cp	r18, r24
     512a:	39 07       	cpc	r19, r25
     512c:	48 f3       	brcs	.-46     	; 0x5100 <calculateChecksum+0x1e>
+		checksumCA += data[i];
+	}
+	return checksumCA;
     512e:	89 81       	ldd	r24, Y+1	; 0x01
+}
     5130:	27 96       	adiw	r28, 0x07	; 7
     5132:	cd bf       	out	0x3d, r28	; 61
     5134:	de bf       	out	0x3e, r29	; 62
@@ -9857,6 +9876,11 @@ Disassembly of section .text:
     513a:	08 95       	ret
 
 0000513c <generate_signal>:
+
+// Funktion zur Generierung des Signals basierend auf der Zeit seit dem letzten "Pik"
+// Wie?
+
+char generate_signal(int time_since_last_pik) {
     513c:	cf 93       	push	r28
     513e:	df 93       	push	r29
     5140:	1f 92       	push	r1
@@ -9865,25 +9889,35 @@ Disassembly of section .text:
     5146:	de b7       	in	r29, 0x3e	; 62
     5148:	89 83       	std	Y+1, r24	; 0x01
     514a:	9a 83       	std	Y+2, r25	; 0x02
+	if (time_since_last_pik < 32) {
     514c:	89 81       	ldd	r24, Y+1	; 0x01
     514e:	9a 81       	ldd	r25, Y+2	; 0x02
     5150:	80 97       	sbiw	r24, 0x20	; 32
     5152:	14 f4       	brge	.+4      	; 0x5158 <generate_signal+0x1c>
+		return '0';
     5154:	80 e3       	ldi	r24, 0x30	; 48
     5156:	0d c0       	rjmp	.+26     	; 0x5172 <generate_signal+0x36>
+		} else if (time_since_last_pik < 40) {
     5158:	89 81       	ldd	r24, Y+1	; 0x01
     515a:	9a 81       	ldd	r25, Y+2	; 0x02
     515c:	88 97       	sbiw	r24, 0x28	; 40
     515e:	14 f4       	brge	.+4      	; 0x5164 <generate_signal+0x28>
+		return '1';
     5160:	81 e3       	ldi	r24, 0x31	; 49
     5162:	07 c0       	rjmp	.+14     	; 0x5172 <generate_signal+0x36>
+		} else if (time_since_last_pik < 48) {
     5164:	89 81       	ldd	r24, Y+1	; 0x01
     5166:	9a 81       	ldd	r25, Y+2	; 0x02
     5168:	c0 97       	sbiw	r24, 0x30	; 48
     516a:	14 f4       	brge	.+4      	; 0x5170 <generate_signal+0x34>
+		return '2';
     516c:	82 e3       	ldi	r24, 0x32	; 50
     516e:	01 c0       	rjmp	.+2      	; 0x5172 <generate_signal+0x36>
+		} else {
+		return '3';
     5170:	83 e3       	ldi	r24, 0x33	; 51
+	}
+}
     5172:	0f 90       	pop	r0
     5174:	0f 90       	pop	r0
     5176:	df 91       	pop	r29
@@ -9891,6 +9925,10 @@ Disassembly of section .text:
     517a:	08 95       	ret
 
 0000517c <readImpulses>:
+
+
+
+void readImpulses(uint8_t *receivebuffer) {
     517c:	cf 93       	push	r28
     517e:	df 93       	push	r29
     5180:	cd b7       	in	r28, 0x3d	; 61
@@ -9900,14 +9938,19 @@ Disassembly of section .text:
     5188:	de bf       	out	0x3e, r29	; 62
     518a:	8f 83       	std	Y+7, r24	; 0x07
     518c:	98 87       	std	Y+8, r25	; 0x08
+	int index = 0;
     518e:	19 82       	std	Y+1, r1	; 0x01
     5190:	1a 82       	std	Y+2, r1	; 0x02
+	//Die Impulse liegen in aufeinanderfolgender Reihenfolge im receivebuffer
+	for (int i = 0; i < 4; ++i) {
     5192:	1b 82       	std	Y+3, r1	; 0x03
     5194:	1c 82       	std	Y+4, r1	; 0x04
     5196:	39 c0       	rjmp	.+114    	; 0x520a <readImpulses+0x8e>
+		for (int j = 0; j < NR_OF_SAMPLES; ++j) {
     5198:	1d 82       	std	Y+5, r1	; 0x05
     519a:	1e 82       	std	Y+6, r1	; 0x06
     519c:	2d c0       	rjmp	.+90     	; 0x51f8 <readImpulses+0x7c>
+			impulses[i][j] = 0x800 + receivebuffer[index++];
     519e:	89 81       	ldd	r24, Y+1	; 0x01
     51a0:	9a 81       	ldd	r25, Y+2	; 0x02
     51a2:	9c 01       	movw	r18, r24
@@ -9948,6 +9991,12 @@ Disassembly of section .text:
     51e8:	fc 01       	movw	r30, r24
     51ea:	20 83       	st	Z, r18
     51ec:	31 83       	std	Z+1, r19	; 0x01
+
+void readImpulses(uint8_t *receivebuffer) {
+	int index = 0;
+	//Die Impulse liegen in aufeinanderfolgender Reihenfolge im receivebuffer
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < NR_OF_SAMPLES; ++j) {
     51ee:	8d 81       	ldd	r24, Y+5	; 0x05
     51f0:	9e 81       	ldd	r25, Y+6	; 0x06
     51f2:	01 96       	adiw	r24, 0x01	; 1
@@ -9957,6 +10006,12 @@ Disassembly of section .text:
     51fa:	9e 81       	ldd	r25, Y+6	; 0x06
     51fc:	80 97       	sbiw	r24, 0x20	; 32
     51fe:	78 f2       	brcs	.-98     	; 0x519e <readImpulses+0x22>
+
+
+void readImpulses(uint8_t *receivebuffer) {
+	int index = 0;
+	//Die Impulse liegen in aufeinanderfolgender Reihenfolge im receivebuffer
+	for (int i = 0; i < 4; ++i) {
     5200:	8b 81       	ldd	r24, Y+3	; 0x03
     5202:	9c 81       	ldd	r25, Y+4	; 0x04
     5204:	01 96       	adiw	r24, 0x01	; 1
@@ -9966,6 +10021,11 @@ Disassembly of section .text:
     520c:	9c 81       	ldd	r25, Y+4	; 0x04
     520e:	04 97       	sbiw	r24, 0x04	; 4
     5210:	1c f2       	brlt	.-122    	; 0x5198 <readImpulses+0x1c>
+		for (int j = 0; j < NR_OF_SAMPLES; ++j) {
+			impulses[i][j] = 0x800 + receivebuffer[index++];
+		}
+	}
+}
     5212:	00 00       	nop
     5214:	28 96       	adiw	r28, 0x08	; 8
     5216:	cd bf       	out	0x3d, r28	; 61
@@ -9975,6 +10035,9 @@ Disassembly of section .text:
     521e:	08 95       	ret
 
 00005220 <vQuamDec>:
+
+void vQuamDec(void* pvParameters)
+{
     5220:	cf 92       	push	r12
     5222:	df 92       	push	r13
     5224:	ef 92       	push	r14
@@ -9994,22 +10057,40 @@ Disassembly of section .text:
     5240:	f9 01       	movw	r30, r18
     5242:	80 83       	st	Z, r24
     5244:	91 83       	std	Z+1, r25	; 0x01
+	( void ) pvParameters;
+	
+	decoderQueue = xQueueCreate( 4, NR_OF_SAMPLES * sizeof(int16_t) );
     5246:	40 e0       	ldi	r20, 0x00	; 0
     5248:	60 e4       	ldi	r22, 0x40	; 64
     524a:	84 e0       	ldi	r24, 0x04	; 4
     524c:	0e 94 e4 0b 	call	0x17c8	; 0x17c8 <xQueueGenericCreate>
     5250:	80 93 b3 3a 	sts	0x3AB3, r24	; 0x803ab3 <decoderQueue>
     5254:	90 93 b4 3a 	sts	0x3AB4, r25	; 0x803ab4 <decoderQueue+0x1>
+	
+	while(evDMAState == NULL) {
     5258:	06 c0       	rjmp	.+12     	; 0x5266 <vQuamDec+0x46>
+		vTaskDelay(3/portTICK_RATE_MS);
     525a:	63 e0       	ldi	r22, 0x03	; 3
     525c:	70 e0       	ldi	r23, 0x00	; 0
     525e:	80 e0       	ldi	r24, 0x00	; 0
     5260:	90 e0       	ldi	r25, 0x00	; 0
     5262:	0e 94 38 12 	call	0x2470	; 0x2470 <vTaskDelay>
+{
+	( void ) pvParameters;
+	
+	decoderQueue = xQueueCreate( 4, NR_OF_SAMPLES * sizeof(int16_t) );
+	
+	while(evDMAState == NULL) {
     5266:	80 91 ad 3a 	lds	r24, 0x3AAD	; 0x803aad <evDMAState>
     526a:	90 91 ae 3a 	lds	r25, 0x3AAE	; 0x803aae <evDMAState+0x1>
     526e:	89 2b       	or	r24, r25
     5270:	a1 f3       	breq	.-24     	; 0x525a <vQuamDec+0x3a>
+		vTaskDelay(3/portTICK_RATE_MS);
+	}
+	
+	uint16_t bufferelement[NR_OF_SAMPLES];
+	
+	xEventGroupWaitBits(evDMAState, DMADECREADY, false, true, portMAX_DELAY);
     5272:	80 91 ad 3a 	lds	r24, 0x3AAD	; 0x803aad <evDMAState>
     5276:	90 91 ae 3a 	lds	r25, 0x3AAE	; 0x803aae <evDMAState+0x1>
     527a:	cc 24       	eor	r12, r12
@@ -10023,12 +10104,18 @@ Disassembly of section .text:
     528a:	60 e0       	ldi	r22, 0x00	; 0
     528c:	70 e0       	ldi	r23, 0x00	; 0
     528e:	0e 94 fb 02 	call	0x5f6	; 0x5f6 <xEventGroupWaitBits>
+	for(;;) {
+		// Annahme: Hier wird die Zeit seit dem letzten "Pik"-Signal aktualisiert
+		time_since_pik++; // Aktualisiere die Zeit bei jedem Schleifendurchlauf
     5292:	80 91 27 3a 	lds	r24, 0x3A27	; 0x803a27 <time_since_pik>
     5296:	90 91 28 3a 	lds	r25, 0x3A28	; 0x803a28 <time_since_pik+0x1>
     529a:	01 96       	adiw	r24, 0x01	; 1
     529c:	80 93 27 3a 	sts	0x3A27, r24	; 0x803a27 <time_since_pik>
     52a0:	90 93 28 3a 	sts	0x3A28, r25	; 0x803a28 <time_since_pik+0x1>
+		
+		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
     52a4:	51 c0       	rjmp	.+162    	; 0x5348 <vQuamDec+0x128>
+			if(xQueueReceive(decoderQueue, &bufferelement[0], portMAX_DELAY) == pdTRUE) {
     52a6:	80 91 b3 3a 	lds	r24, 0x3AB3	; 0x803ab3 <decoderQueue>
     52aa:	90 91 b4 3a 	lds	r25, 0x3AB4	; 0x803ab4 <decoderQueue+0x1>
     52ae:	2f ef       	ldi	r18, 0xFF	; 255
@@ -10041,19 +10128,29 @@ Disassembly of section .text:
     52be:	81 30       	cpi	r24, 0x01	; 1
     52c0:	09 f0       	breq	.+2      	; 0x52c4 <vQuamDec+0xa4>
     52c2:	42 c0       	rjmp	.+132    	; 0x5348 <vQuamDec+0x128>
+				//Decode Buffer
+					for (k = 0; k < 19; k++){
     52c4:	10 92 25 3a 	sts	0x3A25, r1	; 0x803a25 <k>
     52c8:	10 92 26 3a 	sts	0x3A26, r1	; 0x803a26 <k+0x1>
     52cc:	37 c0       	rjmp	.+110    	; 0x533c <vQuamDec+0x11c>
+					 symbol = generate_signal(time_since_pik); // Generiert das Signal entsprechend der Zeit seit dem letzten "Pik"-Signal
     52ce:	80 91 27 3a 	lds	r24, 0x3A27	; 0x803a27 <time_since_pik>
     52d2:	90 91 28 3a 	lds	r25, 0x3A28	; 0x803a28 <time_since_pik+0x1>
     52d6:	0e 94 9e 28 	call	0x513c	; 0x513c <generate_signal>
     52da:	80 93 22 3a 	sts	0x3A22, r24	; 0x803a22 <symbol>
+					// Decodiere das Symbol
+					switch (symbol){
     52de:	80 91 22 3a 	lds	r24, 0x3A22	; 0x803a22 <symbol>
     52e2:	88 2f       	mov	r24, r24
     52e4:	90 e0       	ldi	r25, 0x00	; 0
     52e6:	c0 97       	sbiw	r24, 0x30	; 48
     52e8:	04 97       	sbiw	r24, 0x04	; 4
     52ea:	70 f4       	brcc	.+28     	; 0x5308 <vQuamDec+0xe8>
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+							checksumGL += receivebuffer[k];
     52ec:	80 91 25 3a 	lds	r24, 0x3A25	; 0x803a25 <k>
     52f0:	90 91 26 3a 	lds	r25, 0x3A26	; 0x803a26 <k+0x1>
     52f4:	80 50       	subi	r24, 0x00	; 0
@@ -10063,19 +10160,38 @@ Disassembly of section .text:
     52fc:	80 91 23 3a 	lds	r24, 0x3A23	; 0x803a23 <checksumGL>
     5300:	89 0f       	add	r24, r25
     5302:	80 93 23 3a 	sts	0x3A23, r24	; 0x803a23 <checksumGL>
+						break;
     5306:	01 c0       	rjmp	.+2      	; 0x530a <vQuamDec+0xea>
+						default:
+							// Auf Dispaly "Unknown symbol received!"
+						break;
     5308:	00 00       	nop
+					}
+					
+					// Zurücksetzen des Zählers nach jedem Signal
+					time_since_pik = 0;
     530a:	10 92 27 3a 	sts	0x3A27, r1	; 0x803a27 <time_since_pik>
     530e:	10 92 28 3a 	sts	0x3A28, r1	; 0x803a28 <time_since_pik+0x1>
+					
+					// Aufruf der Funktion zum Lesen der Impulse
+					readImpulses(receivebuffer);
     5312:	80 e0       	ldi	r24, 0x00	; 0
     5314:	90 e2       	ldi	r25, 0x20	; 32
     5316:	0e 94 be 28 	call	0x517c	; 0x517c <readImpulses>
+					
+					calculatedChecksum = calculateChecksum(receivebuffer, 19);
     531a:	63 e1       	ldi	r22, 0x13	; 19
     531c:	70 e0       	ldi	r23, 0x00	; 0
     531e:	80 e0       	ldi	r24, 0x00	; 0
     5320:	90 e2       	ldi	r25, 0x20	; 32
     5322:	0e 94 71 28 	call	0x50e2	; 0x50e2 <calculateChecksum>
     5326:	80 93 24 3a 	sts	0x3A24, r24	; 0x803a24 <calculatedChecksum>
+		time_since_pik++; // Aktualisiere die Zeit bei jedem Schleifendurchlauf
+		
+		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
+			if(xQueueReceive(decoderQueue, &bufferelement[0], portMAX_DELAY) == pdTRUE) {
+				//Decode Buffer
+					for (k = 0; k < 19; k++){
     532a:	80 91 25 3a 	lds	r24, 0x3A25	; 0x803a25 <k>
     532e:	90 91 26 3a 	lds	r25, 0x3A26	; 0x803a26 <k+0x1>
     5332:	01 96       	adiw	r24, 0x01	; 1
@@ -10085,20 +10201,37 @@ Disassembly of section .text:
     5340:	90 91 26 3a 	lds	r25, 0x3A26	; 0x803a26 <k+0x1>
     5344:	43 97       	sbiw	r24, 0x13	; 19
     5346:	1c f2       	brlt	.-122    	; 0x52ce <vQuamDec+0xae>
+	xEventGroupWaitBits(evDMAState, DMADECREADY, false, true, portMAX_DELAY);
+	for(;;) {
+		// Annahme: Hier wird die Zeit seit dem letzten "Pik"-Signal aktualisiert
+		time_since_pik++; // Aktualisiere die Zeit bei jedem Schleifendurchlauf
+		
+		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
     5348:	80 91 b3 3a 	lds	r24, 0x3AB3	; 0x803ab3 <decoderQueue>
     534c:	90 91 b4 3a 	lds	r25, 0x3AB4	; 0x803ab4 <decoderQueue+0x1>
     5350:	0e 94 4b 0e 	call	0x1c96	; 0x1c96 <uxQueueMessagesWaiting>
     5354:	88 23       	and	r24, r24
     5356:	09 f0       	breq	.+2      	; 0x535a <vQuamDec+0x13a>
     5358:	a6 cf       	rjmp	.-180    	; 0x52a6 <vQuamDec+0x86>
+						// Auf Dispaly "Checksum mismatch!" // Protokolliere Checksummenfehler
+					}
+				}
+			}
+		}		
+		vTaskDelay( 2 / portTICK_RATE_MS );
     535a:	62 e0       	ldi	r22, 0x02	; 2
     535c:	70 e0       	ldi	r23, 0x00	; 0
     535e:	80 e0       	ldi	r24, 0x00	; 0
     5360:	90 e0       	ldi	r25, 0x00	; 0
     5362:	0e 94 38 12 	call	0x2470	; 0x2470 <vTaskDelay>
+	}
     5366:	95 cf       	rjmp	.-214    	; 0x5292 <vQuamDec+0x72>
 
 00005368 <fillDecoderQueue>:
+}
+
+void fillDecoderQueue(uint16_t buffer[NR_OF_SAMPLES])
+{
     5368:	cf 93       	push	r28
     536a:	df 93       	push	r29
     536c:	00 d0       	rcall	.+0      	; 0x536e <fillDecoderQueue+0x6>
@@ -10106,7 +10239,10 @@ Disassembly of section .text:
     5370:	de b7       	in	r29, 0x3e	; 62
     5372:	8a 83       	std	Y+2, r24	; 0x02
     5374:	9b 83       	std	Y+3, r25	; 0x03
+	BaseType_t xTaskWokenByReceive = pdFALSE;
     5376:	19 82       	std	Y+1, r1	; 0x01
+
+	xQueueSendFromISR( decoderQueue, &buffer[0], &xTaskWokenByReceive );
     5378:	80 91 b3 3a 	lds	r24, 0x3AB3	; 0x803ab3 <decoderQueue>
     537c:	90 91 b4 3a 	lds	r25, 0x3AB4	; 0x803ab4 <decoderQueue+0x1>
     5380:	6a 81       	ldd	r22, Y+2	; 0x02
@@ -10116,6 +10252,7 @@ Disassembly of section .text:
     5388:	4f 5f       	subi	r20, 0xFF	; 255
     538a:	5f 4f       	sbci	r21, 0xFF	; 255
     538c:	0e 94 2b 0d 	call	0x1a56	; 0x1a56 <xQueueGenericSendFromISR>
+}
     5390:	00 00       	nop
     5392:	23 96       	adiw	r28, 0x03	; 3
     5394:	cd bf       	out	0x3d, r28	; 61
@@ -10125,6 +10262,9 @@ Disassembly of section .text:
     539c:	08 95       	ret
 
 0000539e <__vector_8>:
+
+ISR(DMA_CH2_vect)
+{
     539e:	1f 92       	push	r1
     53a0:	0f 92       	push	r0
     53a2:	00 90 3f 00 	lds	r0, 0x003F	; 0x80003f <__TEXT_REGION_LENGTH__+0x7de03f>
@@ -10148,6 +10288,7 @@ Disassembly of section .text:
     53ca:	df 93       	push	r29
     53cc:	cd b7       	in	r28, 0x3d	; 61
     53ce:	de b7       	in	r29, 0x3e	; 62
+	DMA.CH2.CTRLB|=0x10;
     53d0:	80 e0       	ldi	r24, 0x00	; 0
     53d2:	91 e0       	ldi	r25, 0x01	; 1
     53d4:	20 e0       	ldi	r18, 0x00	; 0
@@ -10157,9 +10298,12 @@ Disassembly of section .text:
     53dc:	20 61       	ori	r18, 0x10	; 16
     53de:	fc 01       	movw	r30, r24
     53e0:	21 ab       	std	Z+49, r18	; 0x31
+
+	fillDecoderQueue( &adcBuffer0[0] );
     53e2:	8d e1       	ldi	r24, 0x1D	; 29
     53e4:	9c e3       	ldi	r25, 0x3C	; 60
     53e6:	0e 94 b4 29 	call	0x5368	; 0x5368 <fillDecoderQueue>
+}
     53ea:	00 00       	nop
     53ec:	df 91       	pop	r29
     53ee:	cf 91       	pop	r28
@@ -10184,6 +10328,9 @@ Disassembly of section .text:
     5418:	18 95       	reti
 
 0000541a <__vector_9>:
+
+ISR(DMA_CH3_vect)
+{
     541a:	1f 92       	push	r1
     541c:	0f 92       	push	r0
     541e:	00 90 3f 00 	lds	r0, 0x003F	; 0x80003f <__TEXT_REGION_LENGTH__+0x7de03f>
@@ -10207,6 +10354,7 @@ Disassembly of section .text:
     5446:	df 93       	push	r29
     5448:	cd b7       	in	r28, 0x3d	; 61
     544a:	de b7       	in	r29, 0x3e	; 62
+	DMA.CH3.CTRLB |= 0x10;
     544c:	80 e0       	ldi	r24, 0x00	; 0
     544e:	91 e0       	ldi	r25, 0x01	; 1
     5450:	20 e0       	ldi	r18, 0x00	; 0
@@ -10220,9 +10368,12 @@ Disassembly of section .text:
     5460:	9f 4f       	sbci	r25, 0xFF	; 255
     5462:	fc 01       	movw	r30, r24
     5464:	20 83       	st	Z, r18
+
+	fillDecoderQueue( &adcBuffer1[0] );
     5466:	8d e5       	ldi	r24, 0x5D	; 93
     5468:	9c e3       	ldi	r25, 0x3C	; 60
     546a:	0e 94 b4 29 	call	0x5368	; 0x5368 <fillDecoderQueue>
+}
     546e:	00 00       	nop
     5470:	df 91       	pop	r29
     5472:	cf 91       	pop	r28
@@ -10265,14 +10416,14 @@ void printBinary(unsigned char byte) {
     54ae:	89 83       	std	Y+1, r24	; 0x01
     54b0:	9a 83       	std	Y+2, r25	; 0x02
     54b2:	20 c0       	rjmp	.+64     	; 0x54f4 <printBinary+0x56>
-		printf("%u", (byte << i) & 1);  // Hier verwenden wir %u für unsigned
+		printf("%u", (byte >> i) & 1);  // Hier verwenden wir %u für unsigned
     54b4:	8b 81       	ldd	r24, Y+3	; 0x03
     54b6:	88 2f       	mov	r24, r24
     54b8:	90 e0       	ldi	r25, 0x00	; 0
     54ba:	09 80       	ldd	r0, Y+1	; 0x01
     54bc:	02 c0       	rjmp	.+4      	; 0x54c2 <printBinary+0x24>
-    54be:	88 0f       	add	r24, r24
-    54c0:	99 1f       	adc	r25, r25
+    54be:	95 95       	asr	r25
+    54c0:	87 95       	ror	r24
     54c2:	0a 94       	dec	r0
     54c4:	e2 f7       	brpl	.-8      	; 0x54be <printBinary+0x20>
     54c6:	81 70       	andi	r24, 0x01	; 1
@@ -10307,7 +10458,7 @@ void printBinary(unsigned char byte) {
     54f6:	9a 81       	ldd	r25, Y+2	; 0x02
     54f8:	99 23       	and	r25, r25
     54fa:	e4 f6       	brge	.-72     	; 0x54b4 <printBinary+0x16>
-		printf("%u", (byte << i) & 1);  // Hier verwenden wir %u für unsigned
+		printf("%u", (byte >> i) & 1);  // Hier verwenden wir %u für unsigned
 	}
 }
     54fc:	00 00       	nop

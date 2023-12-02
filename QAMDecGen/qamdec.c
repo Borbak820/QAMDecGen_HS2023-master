@@ -26,7 +26,7 @@
 #include "qamdec.h"
 
 QueueHandle_t decoderQueue;
-uint8_t receivebuffer[100] = {1, 3, 2, 3, 3, 0, 0, 0, 2, 0,	3, 0, 0, 0, 3, 0, 0, 0, 3, 3, 1, 1, 0,};
+uint8_t receivebuffer[100] = {1, 3, 1, 0, 0, 1, 0, 0, 3, 3,	1, 2, 0, 2, 2, 0, 0, 1, 1, 2, 1, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,};
 uint8_t symbol = 0;
 uint8_t checksumGL = 0; // Initialisierung der Checksumme
 uint8_t calculatedChecksum = 0; // Variable für die berechnete Checksumme
@@ -44,6 +44,8 @@ uint8_t calculateChecksum(uint8_t *data, size_t length) {
 }
 
 // Funktion zur Generierung des Signals basierend auf der Zeit seit dem letzten "Pik"
+// Wie?
+
 char generate_signal(int time_since_last_pik) {
 	if (time_since_last_pik < 32) {
 		return '0';
@@ -55,6 +57,8 @@ char generate_signal(int time_since_last_pik) {
 		return '3';
 	}
 }
+
+
 
 void readImpulses(uint8_t *receivebuffer) {
 	int index = 0;

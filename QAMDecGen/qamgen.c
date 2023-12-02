@@ -64,7 +64,7 @@ unsigned char byteArray[4];		// Float-Daten als binary
 
 void printBinary(unsigned char byte) {
 	for (int i = 7; i >= 0; --i) {
-		printf("%u", (byte << i) & 1);  // Hier verwenden wir %u für unsigned
+		printf("%u", (byte >> i) & 1);  // Hier verwenden wir %u für unsigned
 	}
 }
 
