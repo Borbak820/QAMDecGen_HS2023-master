@@ -10265,14 +10265,14 @@ void printBinary(unsigned char byte) {
     54ae:	89 83       	std	Y+1, r24	; 0x01
     54b0:	9a 83       	std	Y+2, r25	; 0x02
     54b2:	20 c0       	rjmp	.+64     	; 0x54f4 <printBinary+0x56>
-		printf("%u", (byte >> i) & 1);  // Hier verwenden wir %u für unsigned
+		printf("%u", (byte << i) & 1);  // Hier verwenden wir %u für unsigned
     54b4:	8b 81       	ldd	r24, Y+3	; 0x03
     54b6:	88 2f       	mov	r24, r24
     54b8:	90 e0       	ldi	r25, 0x00	; 0
     54ba:	09 80       	ldd	r0, Y+1	; 0x01
     54bc:	02 c0       	rjmp	.+4      	; 0x54c2 <printBinary+0x24>
-    54be:	95 95       	asr	r25
-    54c0:	87 95       	ror	r24
+    54be:	88 0f       	add	r24, r24
+    54c0:	99 1f       	adc	r25, r25
     54c2:	0a 94       	dec	r0
     54c4:	e2 f7       	brpl	.-8      	; 0x54be <printBinary+0x20>
     54c6:	81 70       	andi	r24, 0x01	; 1
@@ -10307,7 +10307,7 @@ void printBinary(unsigned char byte) {
     54f6:	9a 81       	ldd	r25, Y+2	; 0x02
     54f8:	99 23       	and	r25, r25
     54fa:	e4 f6       	brge	.-72     	; 0x54b4 <printBinary+0x16>
-		printf("%u", (byte >> i) & 1);  // Hier verwenden wir %u für unsigned
+		printf("%u", (byte << i) & 1);  // Hier verwenden wir %u für unsigned
 	}
 }
     54fc:	00 00       	nop

@@ -139,3 +139,33 @@ ISR(DMA_CH3_vect)
 
 	fillDecoderQueue( &adcBuffer1[0] );
 }
+
+/*
+
+unsigned char byteArray[4];
+
+    // Hier füge den Code zum Einlesen des Byte-Arrays ein
+    // Du kannst das Byte-Array von einer Datei lesen, von der Benutzereingabe oder anderweitig erhalten
+
+    // Beispiel: Annahme, dass das Byte-Array bereits vorliegt
+    // Beachte, dass dies nur ein Beispiel ist und die genaue Art des Einlesens von deiner Anwendung abhängt
+    // Möglicherweise möchtest du dies aus einer Datei oder von einem anderen Ort lesen.
+    for (int i = 0; i < sizeof(byteArray); ++i) {
+        // Hier wird das Byte-Array mit Beispieldaten initialisiert
+        byteArray[0] = 0b10110101;
+        byteArray[1] = 0b01101000;
+        byteArray[2] = 0b10010110;
+        byteArray[3] = 0b01000010;
+    }
+
+    // Umwandlung des Byte-Arrays zurück in einen Float
+    float reconstructedFloat;
+    memcpy(&reconstructedFloat, byteArray, sizeof(float));
+
+    // Ausgabe des rekonstruierten Float-Werts
+    printf("Rekonstruierter Float-Wert: %f\n", reconstructedFloat);
+
+    return 0;
+}
+
+*/
