@@ -26,22 +26,15 @@
 #include "qamdec.h"
 
 QueueHandle_t decoderQueue;
-uint8_t receivebuffer[100] = {1, 3, 1, 0, 0, 1, 0, 0, 3, 3,	1, 2, 0, 2, 2, 0, 0, 1, 1, 2, 1, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0,};
+uint8_t receivebuffer[100] = {1, 3, 1, 0, 0, 1, 0, 0, 3, 3,	1, 2, 0, 2, 2, 0, 0, 1, 1, 2, 1, 0,0 ,0, 2, 1, 0, 0, 0, 0, 0, 0};
 uint8_t symbol = 0;
 uint8_t checksumGL = 0; // Initialisierung der Checksumme
 uint8_t calculatedChecksum = 0; // Variable für die berechnete Checksumme
 int k = 0;
 int time_since_pik = 0;
-int16_t impulses[4][NR_OF_SAMPLES]; //Die Impulse werden in einem Array gespeichert
+float reconstructedFloat;
 
-// Funktion zur Berechnung der Checksumme
-uint8_t calculateChecksum(uint8_t *data, size_t length) {
-	uint8_t checksumCA = 0;
-	for (size_t i = 0; i < length; ++i) {
-		checksumCA += data[i];
-	}
-	return checksumCA;
-}
+
 
 // Funktion zur Generierung des Signals basierend auf der Zeit seit dem letzten "Pik"
 // Wie?
@@ -60,22 +53,16 @@ char generate_signal(int time_since_last_pik) {
 
 
 
-void readImpulses(uint8_t *receivebuffer) {
-	int index = 0;
-	//Die Impulse liegen in aufeinanderfolgender Reihenfolge im receivebuffer
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < NR_OF_SAMPLES; ++j) {
-			impulses[i][j] = 0x800 + receivebuffer[index++];
-		}
-	}
-}
-
 void vQuamDec(void* pvParameters)
 {
 	( void ) pvParameters;
-	
+	unsigned char byteArray[4];
+	byteArray[0] = 0b00000000;
+	byteArray[1] = 0b00000000;
+	byteArray[2] = 0b10110110;
+	byteArray[3] = 0b01000001;
 	decoderQueue = xQueueCreate( 4, NR_OF_SAMPLES * sizeof(int16_t) );
-	
+	char calculatedChecksum = 0;
 	while(evDMAState == NULL) {
 		vTaskDelay(3/portTICK_RATE_MS);
 	}
@@ -90,13 +77,23 @@ void vQuamDec(void* pvParameters)
 		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
 			if(xQueueReceive(decoderQueue, &bufferelement[0], portMAX_DELAY) == pdTRUE) {
 				//Decode Buffer
-					for (k = 0; k < 19; k++){
+					for (size_t i = 0; i < (NR_OF_SAMPLES-8); ++i) {
+						calculatedChecksum += receivebuffer[i];
+					}
+				
+					for (k = 0; k < NR_OF_SAMPLES -8; k++){
 					 symbol = generate_signal(time_since_pik); // Generiert das Signal entsprechend der Zeit seit dem letzten "Pik"-Signal
 					// Decodiere das Symbol
 					switch (symbol){
 						case '0':
+							checksumGL += receivebuffer[k];
+						break;
 						case '1':
+							checksumGL += receivebuffer[k];
+						break;
 						case '2':
+							checksumGL += receivebuffer[k];
+						break;
 						case '3':
 							checksumGL += receivebuffer[k];
 						break;
@@ -105,18 +102,18 @@ void vQuamDec(void* pvParameters)
 						break;
 					}
 					
+
 					// Zurücksetzen des Zählers nach jedem Signal
 					time_since_pik = 0;
 					
-					// Aufruf der Funktion zum Lesen der Impulse
-					readImpulses(receivebuffer);
-					
-					calculatedChecksum = calculateChecksum(receivebuffer, 19);
-					
-					if (calculatedChecksum != checksumGL) {
-						// Auf Dispaly "Checksum mismatch!" // Protokolliere Checksummenfehler
-					}
+
 				}
+				if (calculatedChecksum == checksumGL) {
+					memcpy(&reconstructedFloat, byteArray, sizeof(float));
+				}
+				
+				calculatedChecksum = 0;
+				checksumGL = 0;
 			}
 		}		
 		vTaskDelay( 2 / portTICK_RATE_MS );
