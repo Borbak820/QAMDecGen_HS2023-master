@@ -31,20 +31,20 @@ uint8_t symbol = 0;
 uint8_t checksumGL = 0; // Initialisierung der Checksumme
 uint8_t calculatedChecksum = 0; // Variable für die berechnete Checksumme
 int k = 0;
-int time_since_pik = 0;
+int time_since_peak = 0;
 float reconstructedFloat;
 
 
 
-// Funktion zur Generierung des Signals basierend auf der Zeit seit dem letzten "Pik"
+// Funktion zur Generierung des Signals basierend auf der Zeit seit dem letzten "Peak"
 // Wie?
 
-char generate_signal(int time_since_last_pik) {
-	if (time_since_last_pik < 32) {
+char generate_signal(int time_since_last_peak) {
+	if (time_since_last_peak < 32) {
 		return '0';
-		} else if (time_since_last_pik < 40) {
+		} else if (time_since_last_peak < 40) {
 		return '1';
-		} else if (time_since_last_pik < 48) {
+		} else if (time_since_last_peak < 48) {
 		return '2';
 		} else {
 		return '3';
@@ -56,7 +56,7 @@ char generate_signal(int time_since_last_pik) {
 void vQuamDec(void* pvParameters)
 {
 	( void ) pvParameters;
-	unsigned char byteArray[4];
+	unsigned char byteArray[4];		//Array vom ADC
 	byteArray[0] = 0b00000000;
 	byteArray[1] = 0b00000000;
 	byteArray[2] = 0b10110110;
@@ -71,8 +71,8 @@ void vQuamDec(void* pvParameters)
 	
 	xEventGroupWaitBits(evDMAState, DMADECREADY, false, true, portMAX_DELAY);
 	for(;;) {
-		// Annahme: Hier wird die Zeit seit dem letzten "Pik"-Signal aktualisiert
-		time_since_pik++; // Aktualisiere die Zeit bei jedem Schleifendurchlauf
+		// Annahme: Hier wird die Zeit seit dem letzten "Peak"-Signal aktualisiert
+		time_since_peak++; // Aktualisiere die Zeit bei jedem Schleifendurchlauf
 		
 		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
 			if(xQueueReceive(decoderQueue, &bufferelement[0], portMAX_DELAY) == pdTRUE) {
@@ -82,7 +82,7 @@ void vQuamDec(void* pvParameters)
 					}
 				
 					for (k = 0; k < NR_OF_SAMPLES -8; k++){
-					 symbol = generate_signal(time_since_pik); // Generiert das Signal entsprechend der Zeit seit dem letzten "Pik"-Signal
+					 symbol = generate_signal(time_since_peak); // Generiert das Signal entsprechend der Zeit seit dem letzten "Peak"-Signal
 					// Decodiere das Symbol
 					switch (symbol){
 						case '0':
@@ -104,7 +104,7 @@ void vQuamDec(void* pvParameters)
 					
 
 					// Zurücksetzen des Zählers nach jedem Signal
-					time_since_pik = 0;
+					time_since_peak = 0;
 					
 
 				}
@@ -140,33 +140,3 @@ ISR(DMA_CH3_vect)
 
 	fillDecoderQueue( &adcBuffer1[0] );
 }
-
-/*
-
-unsigned char byteArray[4];
-
-    // Hier füge den Code zum Einlesen des Byte-Arrays ein
-    // Du kannst das Byte-Array von einer Datei lesen, von der Benutzereingabe oder anderweitig erhalten
-
-    // Beispiel: Annahme, dass das Byte-Array bereits vorliegt
-    // Beachte, dass dies nur ein Beispiel ist und die genaue Art des Einlesens von deiner Anwendung abhängt
-    // Möglicherweise möchtest du dies aus einer Datei oder von einem anderen Ort lesen.
-    for (int i = 0; i < sizeof(byteArray); ++i) {
-        // Hier wird das Byte-Array mit Beispieldaten initialisiert
-        byteArray[0] = 0b10110101;
-        byteArray[1] = 0b01101000;
-        byteArray[2] = 0b10010110;
-        byteArray[3] = 0b01000010;
-    }
-
-    // Umwandlung des Byte-Arrays zurück in einen Float
-    float reconstructedFloat;
-    memcpy(&reconstructedFloat, byteArray, sizeof(float));
-
-    // Ausgabe des rekonstruierten Float-Werts
-    printf("Rekonstruierter Float-Wert: %f\n", reconstructedFloat);
-
-    return 0;
-}
-
-*/
