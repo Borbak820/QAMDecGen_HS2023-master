@@ -103,29 +103,33 @@ void createSendData() { //0 -> 3 & 3-> 0 sind Idel Task (createideldata)
 	}
 	uint8_t datalen = strlen(senddata);
 	/*Header Start*/
-	sendbuffer[0] = 1; //Definition Startmuster
+	sendbuffer[0] = 0;
 	sendbuffer[1] = 3;
-	sendbuffer[2] = sendID & 0x03;
-	sendbuffer[3] = (sendID >> 2) & 0x03;
-	sendbuffer[4] = (datalen >> 0) & 0x03;
-	sendbuffer[5] = (datalen >> 2) & 0x03;
-	sendbuffer[6] = (datalen >> 4) & 0x03;
-	sendbuffer[7] = (datalen >> 6) & 0x03;
+	sendbuffer[2] = 0;
+	sendbuffer[3] = 3;
+	sendbuffer[4] = (sendID >> 0) & 0x03;
+	sendbuffer[5] = (sendID >> 2) & 0x03;
+	sendbuffer[6] = (sendID >> 4) & 0x03;
+	sendbuffer[7] = (sendID >> 6) & 0x03;
+	sendbuffer[8] = (datalen >> 0) & 0x03;
+	sendbuffer[9] = (datalen >> 2) & 0x03;
+	sendbuffer[10] = (datalen >> 4) & 0x03;
+	sendbuffer[11] = (datalen >> 6) & 0x03;
 	/*Header END*/
 	for(int i = 0; i < datalen;i++) {
-		sendbuffer[8 + i*4 + 3] = (senddata[i] >> 0) & 0x03; //8 steht für die Grösse vom Header
-		sendbuffer[8 + i*4 + 2] = (senddata[i] >> 2) & 0x03;	// Reihenfolge +n vom sendbuffer geändert wegen LIFO
-		sendbuffer[8 + i*4 + 1] = (senddata[i] >> 4) & 0x03;
-		sendbuffer[8 + i*4 + 0] = (senddata[i] >> 6) & 0x03;
+		sendbuffer[12 + i*4 + 3] = (senddata[i] >> 0) & 0x03; //12 steht für die Grösse vom Header
+		sendbuffer[12 + i*4 + 2] = (senddata[i] >> 2) & 0x03;	// Reihenfolge +n vom sendbuffer geändert wegen LIFO
+		sendbuffer[12 + i*4 + 1] = (senddata[i] >> 4) & 0x03;
+		sendbuffer[12 + i*4 + 0] = (senddata[i] >> 6) & 0x03;
 	} //K nur bis hier mitrechnen
 	uint8_t checksum = 0;
-	for(int i = 0; i < 7 + (datalen * 4); i++) {
+	for(int i = 0; i < 12 + (datalen * 4); i++) {
 		checksum += sendbuffer[i];
 	}
-	sendbuffer[7 + (datalen * 4) + 0] = (checksum >> 0) & 0x03; //Create Master Checksum
-	sendbuffer[7 + (datalen * 4) + 1] = (checksum >> 2) & 0x03;
-	sendbuffer[7 + (datalen * 4) + 2] = (checksum >> 4) & 0x03;
-	sendbuffer[7 + (datalen * 4) + 3] = (checksum >> 6) & 0x03;
+	sendbuffer[12 + (datalen * 4) + 0] = 0;  //Die Checksume wird auf 2bit Paare aufgeteilt
+	sendbuffer[12 + (datalen * 4) + 1] = 1;
+	sendbuffer[12 + (datalen * 4) + 2] = 2;
+	sendbuffer[12 + (datalen * 4) + 3] = 3;
 }
 
 void vQuamGen(void *pvParameters) {

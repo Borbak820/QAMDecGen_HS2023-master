@@ -57,10 +57,10 @@ void vQuamDec(void* pvParameters)
 {
 	( void ) pvParameters;
 	unsigned char byteArray[4];		//Array vom ADC
-	byteArray[0] = 0b00000000;
-	byteArray[1] = 0b00000000;
-	byteArray[2] = 0b10110110;
-	byteArray[3] = 0b01000001;
+	byteArray[0] = 0b11110110;
+	byteArray[1] = 0b00101000;
+	byteArray[2] = 0b00010110;
+	byteArray[3] = 0b01000010;
 	decoderQueue = xQueueCreate( 4, NR_OF_SAMPLES * sizeof(int16_t) );
 	char calculatedChecksum = 0;
 	while(evDMAState == NULL) {
@@ -77,7 +77,7 @@ void vQuamDec(void* pvParameters)
 		while(uxQueueMessagesWaiting(decoderQueue) > 0) {
 			if(xQueueReceive(decoderQueue, &bufferelement[0], portMAX_DELAY) == pdTRUE) {
 				//Decode Buffer
-					for (size_t i = 0; i < (NR_OF_SAMPLES-8); ++i) {
+					for (size_t i = 0; i < (NR_OF_SAMPLES-8); i++) {
 						calculatedChecksum += receivebuffer[i];
 					}
 				
